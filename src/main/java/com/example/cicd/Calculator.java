@@ -2,7 +2,8 @@ package com.example.cicd;
 
 import java.util.List;
 
-public class Calculator {
+public class
+Calculator {
 
     public static int MAX_OPERANDS = 100;
 
