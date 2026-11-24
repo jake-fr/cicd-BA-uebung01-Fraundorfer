@@ -18,10 +18,13 @@ This exercise builds on **UE01 (Git/PR workflow)** and **UE02 (CI with build/tes
 
 2. **GitHub repository link** (default branch up to date; a sample PR is welcome)
 
+Submit your results to eLearning until **December 4th, 2026, 23:55**
+
 ## Prerequisites
 - UE01 repository with Git/branching/PR basics
 - UE02 CI already set up (build + unit tests with Surefire, matrix builds, JaCoCo, SonarCloud)
 - Docker Desktop / Docker Engine installed
+- The intentionally failing test from UE01 (`TextUtilsTest.isPalindrome_caseInsensitive_expectedTrue`) must be fixed (UE02, task 6). The build stage of your Dockerfile runs `mvn package` including the tests, so the Docker build fails as long as this test is red.
 
 ## Tasks & Points
 | Section                    | Task                                                   | What we look for                                                                    |    Pts |
@@ -32,7 +35,7 @@ This exercise builds on **UE01 (Git/PR workflow)** and **UE02 (CI with build/tes
 |                            | Short analysis in PDF                                  | Images/Documentation + 1–2 optimization ideas (e.g., .dockerignore, non-root, base image)     |      1 |
 | **B. CI Integration**      | Separate **Docker job** with sensible triggers         | Placed logically after tests/Sonar; path filters & concurrency avoid duplicate runs |      3 |
 |                            | **Build** image and **tag** with short SHA | Single-arch build (for `load`) or justified alternative; clear tag naming           |      2 |
-|                            | **Upload artifact** as `.tar` named with SHA           | Clear artifact name (e.g., `docker-image-<sha>.tar`)                               |      2 |
+|                            | **Upload artifact** as `.tar` named with SHA           | Clear artifact name (e.g., artifact `docker-image-<sha>` containing `image-<sha>.tar`)                               |      2 |
 |                            | **Clean integration** with existing pipeline           | Job dependencies (`needs`) correct, no Sonar double-analysis, minimal noise         |      2 |
 |                            | **Readability & maintainability**                      | Good job/step names, consistent artifact/tag naming                                 |      2 |
 | **C. Consume Artifact**    | Download artifact from Actions & load image locally                   | report shown in PDF, `docker load -i image-<sha>.tar`, tag visible in `docker images`                                                |      2 |
@@ -65,13 +68,14 @@ This exercise builds on **UE01 (Git/PR workflow)** and **UE02 (CI with build/tes
 - **CI**: Docker job exists, is placed after tests/Sonar, and creates a **.tar artifact** named with short SHA.
 - **SonarCloud** behaves as in UE02 (no duplicate Automatic Analysis vs. CI scan).
 - **Reproducibility**: image tag and artifact names are traceable to the commit.
--- **Documentation quality**: clear screenshots, short explanations, notes on issues and fixes.
+- **Documentation quality**: clear screenshots, short explanations, notes on issues and fixes.
 
 ### Hints
 - Buildx cache can speed things up:
     - `cache-from: type=gha` / `cache-to: type=gha,mode=max`
 - Add a quick diagnostic in the build stage once: `&& ls -la target` (to verify the JAR exists).
-- If you see `no main manifest attribute`, either set a `Main-Class` (maven-jar-plugin) or run via classpath and FQCN (Fully Qualified Class Name).
+- If you see `no main manifest attribute`, either set a `Main-Class` (maven-jar-plugin) or run via classpath and FQCN (Fully Qualified Class Name). In this project the main class is `com.example.cicd.App` and the JAR is `target/ci-cd-uebung-1.0.0.jar`, e.g. `java -cp /app/app.jar com.example.cicd.App`. The lecture demo repo uses a different package (`com.example.hello`), so do not copy its `ENTRYPOINT` unchanged.
+- Use current major versions of the actions: `docker/setup-buildx-action@v4`, `docker/build-push-action@v7`, `actions/upload-artifact@v7` (plus `actions/checkout@v7`, `actions/setup-java@v6` from UE02).
 - Keep Docker concerns **separate** from unit tests/matrix/Sonar — Docker job comes **after** those checks.
 
 
