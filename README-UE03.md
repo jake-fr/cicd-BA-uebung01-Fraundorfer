@@ -51,16 +51,26 @@ Submit your results to eLearning until **December 4th, 2026, 23:55**
 ### 1) Local Docker
 - Multi-stage Dockerfile (build → runtime). Copy the built JAR to `/app/app.jar` 
 - Keep `Dockerfile` at repo root; add a lean `.dockerignore` (e.g., `target/`, `.git/`, IDE/OS files).
-- Verify locally: `docker build …` then `docker run …` and confirm output/endpoint.
+- Verify locally: `docker build …` then `docker run …` and confirm the output. The app is a console program (no web server, no port). Expected output:
+  ```text
+  Sum(2,3) = 5
+  sumUp=10, addAll=10
+  isPalindrome('Anna')? true
+  safeParseInt('42'): 42
+  safeParseInt('x'): 0
+  ```
 
 ### 2) CI Integration guidance
 - Add a **separate job** for Docker that runs **after** your existing build/tests/matrix/Sonar job(s). Use `needs:` to express dependency.
 - Use **Buildx;** for artifact export, prefer **single-arch** + `load: true`, then `docker save` the image and **upload as artifact**. Name artifacts with the **short SHA**.
 - Use **path filters** (only rebuild Docker when relevant files change) and **concurrency** (avoid duplicate runs on rapid pushes).
+- **Check your path filter from UE02.** If it only lists `pom.xml` and `src/**`, a push that changes only the `Dockerfile`, `.dockerignore` or the workflow file starts **no run at all**. Add these paths, e.g. `paths: [ 'pom.xml', 'src/**', 'Dockerfile', '.dockerignore', '.github/workflows/**' ]`.
+- Short SHA in a step: `echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT` (give the step an `id` and read it with `steps.<id>.outputs.short_sha`).
 
 ### 3) Download & Run the CI Image
 - Download the `docker-image-<sha>` artifact from the run.
-- Load locally with `docker load -i image-<sha>.tar` and confirm tag via `docker images`.
+- GitHub delivers the artifact as a **ZIP file**. Unzip it first, then load the `.tar` inside: `docker load -i image-<sha>.tar`. Confirm the tag via `docker images`.
+- The CI image is built for `linux/amd64`. On an Apple Silicon Mac `docker run` prints a platform warning (`linux/amd64` does not match `linux/arm64`); the container still runs through emulation. Mention this in your PDF if you see it.
 - Run locally and add a screenshot/snippet of the output.
 
 ### Acceptance criteria (checklist)
